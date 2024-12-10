@@ -100,7 +100,7 @@ func cli() Config {
 	if *chunkSizeMbLong != 1024 {
 		finalChunkSizeMb = *chunkSizeMbLong
 	}
-	
+
 	return Config{
 		filePath:    finalFilePath,
 		chunkSizeMb: finalChunkSizeMb,

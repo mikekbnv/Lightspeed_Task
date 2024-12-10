@@ -92,9 +92,7 @@ A  Go program designed to efficiently count unique IPv4 addresses in extremely l
 - IPv4 address length between 7-15 bytes
 - Covers range from 0.0.0.0 to 255.255.255.255
 
-## Results
-
-### Sample Large File Processing
+## Results for the provided file
 
 | Metric | Value |
 |--------|-------|
@@ -104,9 +102,15 @@ A  Go program designed to efficiently count unique IPv4 addresses in extremely l
 | **Unique IPs** | 1 billion |
 | **IP Duplication Rate** | 8x |
 | **Processing Time (106 GB)** | 40-45 minutes |
-| **Processing Time (10 GB)** | 2-3 minutes |
 
-## 🛠 Future Improvements
+---
+
+**Note**:  
+These results are based on a regular system (16GB RAM) with a default chunk size of **1024 MB** for the program. Actual processing time and resource usage may vary depending on the system/program specifications.
+
+---
+
+## Future Improvements
 
 - [ ] Add multithreading support for read/write
 - [ ] Develop configuration file support

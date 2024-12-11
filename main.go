@@ -14,7 +14,7 @@ import (
 
 const (
 	OUTPUT_DIR  = "Temporary"     // Directory to store temporary files for required calculations
-	BUFFER_SIZE = 1 * 1024 * 1024 // 512KB
+	BUFFER_SIZE = 1 * 1024 * 1024 // 1 MB
 )
 
 type Config struct {

@@ -2,16 +2,18 @@
 
 ## Overview
 
-A  Go program designed to count unique IPv4 addresses in large files (100GB+). This tool optimizes memory usage and processing time by leveraging binary conversion, merge sort, and priority queue techniques.
+A high-performance Go program designed to count unique IPv4 addresses in large files. This program optimizes memory usage and processing speed through bit manipulation and concurrent processing.
 
 ## Key Features
 
-- **Massive File Processing**: Handles files of 100GB+ size using chunk-based processing
-- **Compression**: Compresses IPv4 addresses from `string` to `uint32` for space efficiency
-- **Configuration**: Customizable chunk size via command-line flags
-- **Sorting**: Efficiently merges chunks using a priority queue
+- **Concurrent Processing:** Utilizes multiple threads for parallel file reading and data processing 
+- **Memory Efficient:** Uses bit array representation for storing IP addresses
+- **Configurable**: Adjustable thread count via command-line flag
+- **Uses POPCNT** instruction for bit counting
+- **Employs atomic operations** for thread safety
+- Implements **buffered** file reading
 
-## Quick Start
+### Quick Start
 
 1. Clone the repository:
    ```bash
@@ -30,9 +32,9 @@ A  Go program designed to count unique IPv4 addresses in large files (100GB+). T
 
 | Flag              | Description                     | Type   | Default |
 |:------------------|:--------------------------------|:------:|:-------:|
-| `-f, -file`      | Path to input file (REQUIRED)   | string |    -    |
-| `-c, -chunk`     | Temporary file chunk size in MB |  int   |  1024   |
-| `-h, -help`      | Display usage information       |   -    |    -    |
+| `-f, -file`       | Path to input file (REQUIRED)   | string |    -    |
+| `-t, -threads`    | Set number of threads           |  int   |  NumCPU |
+| `-h, -help`       | Display usage information       |   -    |    -    |
 
 #### Example Commands
 
@@ -52,56 +54,61 @@ A  Go program designed to count unique IPv4 addresses in large files (100GB+). T
    - Transform IPv4 addresses from `string` to `uint32`
    - Reduces storage from 16 bytes (string) to 4 bytes (uint32)
 
-2. **Chunk Processing**
-   - Splits large input file into manageable chunks
-   - Sorts and writes chunks to temporary binary files
+2. **Store Strategy**
+   - Uses a ``uint32`` array of size 2^27 (512MB) to store IP addresses
+   - Each IP address requires only 1 bit for storage
+   - Maps each IP address to a bit:
+        - The first 27 bits determine the array index.
+        - The last 5 bits determine the bit index within the ``uint32``.
 
-3. **Merge Strategy**
-   - Uses priority queue for efficient chunk merging
-   - Produces a final sorted binary file
-
+3. **Concurrent Processing**
+    - Divides file reading among multiple threads
+    - Uses atomic operations for thread-safe bit array updates
+     
 4. **Unique Counting**
-   - Sequentially reads sorted binary file
-   - Compares adjacent addresses to count unique entries
+    - Efficient bit counting using hardware instructions
+    - Single pass counting after all IPs are processed
+   
 
 ## Performance Metrics
 
-#### Space Efficiency
-- **String Format**: `0.0.0.0\n` = 8 bytes; `255.255.255.255\n` = 16 bytes
-- **Integer Format**: `uint32` = 4 bytes
-- **Compression Ratio**: Up to 4x reduction
+#### Computational Complexity
 
-#### Memory Profile
-- **Estimated Memory Usage**: 3-4x chunk size
-- Accounts for buffering and sorting
-
-### Computational Complexity
-
-| Operation | Time Complexity | Space Complexity |
-|-----------|-----------------|------------------|
-| Sorting | O(n log n) | O(m) |
-| Unique Count | O(n) | O(b) |
-| Overall | O(n + n log n) | O(4 × m + b) |
-\**n - file size; m - chunk size; b - buffer size;*
-## Results for the provided file
+| Time Complexity | Space Complexity |
+|-----------------|------------------|
+| O(n) | O(512MB + b * t) |
+\**n - file size; t - num of threads; b - buffer size;*
+#### Results for the provided file
 
 | Metric | Value |
 |--------|-------|
 | **Input File Size** | 106 GB |
-| **Compressed Size** | 29.8 GB |
 | **Total Processed IPs** | 8 000 000 000 |
 | **Unique IPs** | 1 000 000 000 |
 | **IP Duplication Rate** | 1:8 |
-| **Processing Time (106 GB)** | ~48 mins |
 
----
+| Num of threads | Time | 
+|----------------|------|
+| 1               | ~4m |
+| 2               | ~2m |
+| 4             | ~1m5s |
+| 8              | ~45s |
+| 16             | ~35s |
 
-**Note**:  
-These results are based on a regular system (16GB RAM) with a default chunk size of **1024 MB** for the program. Actual processing time and resource usage may vary depending on the system/program specifications.
+ **Note: The most effective thread count is equal to the number of logical cores available on the system.**
+ 
+## System Benchmark
 
----
+**These results were achieved on a system with:**
 
-## Future Improvements
+- CPU: 16-core processor
 
-- [ ] Add multithreading support for read/write/sort
-- [ ] Develop configuration file support
+- RAM: 16 GB
+
+- Storage: SSD with 3.5 GB/s read speed
+
+**Key Observations:**
+
+- The program's speed was limited by the SSD's maximum read speed.
+
+- On faster storage, the processing time could be further reduced.
